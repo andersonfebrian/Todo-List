@@ -1,13 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/home.dart';
 import 'loading.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(TodoApp());
 }
 
-class TodoApp extends StatelessWidget {
-  const TodoApp({ Key? key }) : super(key: key);
+class TodoApp extends StatefulWidget {
+  @override
+  _TodoAppState createState() => _TodoAppState();
+}
+
+class _TodoAppState extends State<TodoApp> {
+
+  initializeFirebase() async {
+    await Firebase.initializeApp().whenComplete(() => print("init firebase"));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initializeFirebase();
+  }
 
   @override
   Widget build(BuildContext context) {
