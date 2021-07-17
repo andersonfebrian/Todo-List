@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:todo_list/models/todo.dart';
 
@@ -7,12 +9,6 @@ class TodoService {
 
   static Future<List<Todo>> fetch() async {
     List<Todo> data = [];
-
-    // await _db.collection("todos").get().then((value) {
-    //   value.docs.forEach((element) {
-    //     data.add(Todo.fromJson(element.data()));
-    //   });
-    // });
     
     await _db.collection("todos").orderBy("createdAt").get().then((value) {
       value.docs.forEach((element) {
@@ -59,4 +55,5 @@ class TodoService {
 
     return temp;
   }
+
 }

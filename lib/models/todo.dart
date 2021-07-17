@@ -19,6 +19,13 @@ class Todo {
     createdAt = updatedAt = DateTime.now();
   }
 
+  Todo.fromDocRef(QueryDocumentSnapshot<Map<String, dynamic>> doc)
+      : this.body = doc["body"],
+        this.uuid = doc["uuid"],
+        this.isDone = doc["isDone"],
+        this.createdAt = DateTime.tryParse(doc["createdAt"]),
+        this.updatedAt = DateTime.tryParse(doc["updatedAt"]);
+
   factory Todo.fromJson(Map<String, dynamic> json) => _$TodoFromJson(json);
 
   Map<String, dynamic> toJson() => _$TodoToJson(this);
@@ -36,4 +43,3 @@ class TimestampConverter implements JsonConverter<DateTime, Timestamp> {
   @override
   Timestamp toJson(DateTime date) => Timestamp.fromDate(date);
 }
-

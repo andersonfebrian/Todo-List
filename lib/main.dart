@@ -31,7 +31,6 @@ class _TodoAppState extends State<TodoApp> {
       debugShowCheckedModeBanner: false,
       home: TodoAppHome(),
       routes: {
-        '/loading' : (context) => LoadingPage(),
         '/home' : (context) => TodoAppHome()
       },
     );
