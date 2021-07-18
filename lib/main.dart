@@ -3,8 +3,9 @@ import 'package:todo_list/home.dart';
 import 'loading.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp().whenComplete(() => print("init firebase"));
   runApp(TodoApp());
 }
 
@@ -15,14 +16,9 @@ class TodoApp extends StatefulWidget {
 
 class _TodoAppState extends State<TodoApp> {
 
-  initializeFirebase() async {
-    await Firebase.initializeApp().whenComplete(() => print("init firebase"));
-  }
-
   @override
   void initState() {
     super.initState();
-    initializeFirebase();
   }
 
   @override

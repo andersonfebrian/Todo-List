@@ -157,7 +157,7 @@ class TodoUI {
             : Text("Successful Operation."));
   }
 
-  static Widget mainTodoUI(BuildContext context) {
+  Widget mainTodoUI(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Todo List"),
