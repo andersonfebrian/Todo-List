@@ -7,13 +7,14 @@ import 'package:todo_list/loading.dart';
 class TodoUI {
   static final _key = GlobalKey<FormState>();
   static final _db = FirebaseFirestore.instance;
+  static final _todoService = TodoService();
 
   static Widget singleTodoUI(BuildContext context, Todo todo) {
     return GestureDetector(
       onTap: () {
         bool temp = todo.isDone ?? false;
         todo.isDone = !temp;
-        TodoService.updateTodo(todo);
+        _todoService.updateTodo(todo);
       },
       child: ListTile(
         title: Text(todo.body),
@@ -21,7 +22,7 @@ class TodoUI {
           value: todo.isDone,
           onChanged: (value) {
             todo.isDone = value;
-            TodoService.updateTodo(todo);
+            _todoService.updateTodo(todo);
           },
         ),
         trailing: Row(
@@ -72,7 +73,7 @@ class TodoUI {
           onPressed: () {
             if (_key.currentState!.validate()) {
               _key.currentState!.save();
-              TodoService.insertTodo(new Todo(_temp)).then((value) {
+              _todoService.insertTodo(new Todo(_temp)).then((value) {
                 if (value) {
                   ScaffoldMessenger.of(context).showSnackBar(
                       _snackBar(message: "Successfully Created Todo!"));
@@ -112,7 +113,7 @@ class TodoUI {
             onPressed: () {
               if (_key.currentState!.validate()) {
                 _key.currentState!.save();
-                TodoService.updateTodo(todo).then((value) {
+                _todoService.updateTodo(todo).then((value) {
                   if (value) {
                     ScaffoldMessenger.of(context).showSnackBar(
                         _snackBar(message: "Successfully Edit Todo!"));
@@ -132,7 +133,7 @@ class TodoUI {
       actions: [
         ElevatedButton(
           onPressed: () {
-            TodoService.deleteTodo(todo).then((value) {
+            _todoService.deleteTodo(todo).then((value) {
               if (value) {
                 ScaffoldMessenger.of(context).showSnackBar(
                     _snackBar(message: "Successfully Deleted Todo!"));
