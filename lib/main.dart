@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:todo_list/bloc/todo_bloc.dart';
+import 'package:todo_list/bloc/todo_event.dart';
 import 'package:todo_list/home.dart';
-import 'loading.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
@@ -16,8 +17,11 @@ class TodoApp extends StatefulWidget {
 
 class _TodoAppState extends State<TodoApp> {
 
+  final _bloc = TodoBloc();
+
   @override
   void initState() {
+    _bloc.todoEventSink.add(TodoLoaded());
     super.initState();
   }
 
@@ -25,9 +29,9 @@ class _TodoAppState extends State<TodoApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: TodoAppHome(),
+      home: TodoAppHome(_bloc),
       routes: {
-        '/home' : (context) => TodoAppHome()
+        '/home' : (context) => TodoAppHome(_bloc)
       },
     );
   }
