@@ -1,23 +1,48 @@
+part of 'todo_bloc.dart';
 
-import 'dart:html';
-
-import 'package:todo_list/models/todo.dart';
-
-abstract class TodoState { 
+@immutable
+abstract class TodoState {
   const TodoState();
-
-  @override
-  List<Object> get props => [];
 }
 
-class TodoLoading extends TodoState {}
-class TodoLoadFailure extends TodoState{}
+class TodoInitial extends TodoState {
+  const TodoInitial();
+}
 
-class TodoLoadSuccess extends TodoState {
+class TodoLoading extends TodoState {
+  const TodoLoading();
+}
+
+class TodoLoaded extends TodoState {
   final List<Todo> todos;
-
-  const TodoLoadSuccess(this.todos);
+  const TodoLoaded(this.todos);
 
   @override
-  List<Object> get props => [todos];
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is TodoLoaded && o.todos == todos;
+  }
+
+  @override
+  int get hashCode => super.hashCode;
+}
+
+class TodoSuccess extends TodoState {
+  const TodoSuccess();
+}
+
+class TodoError extends TodoState {
+  final String message;
+  const TodoError(this.message);
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+
+    return o is TodoError && o.message == message;
+  }
+
+  @override
+  int get hashCode => super.hashCode;
 }

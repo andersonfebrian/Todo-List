@@ -1,11 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:todo_list/models/todo.dart';
-import 'package:todo_list/repository/shared/repository.dart';
 
-class TodoRepository implements Repository {
+abstract class ITodoRepository {
+  Future<bool> insertTodo(Todo todo);
+  Future<bool> updateTodo(Todo todo);
+  Future<bool> deleteTodo(Todo todo);
+  Future<List<Todo>> fetchTodos();
+}
+
+class TodoRepository implements ITodoRepository {
   static final _db = FirebaseFirestore.instance.collection("todos");
 
-  Future<List<Todo>> fetchAll() async {
+  @override
+  Future<List<Todo>> fetchTodos() async {
     // List<Todo> data = [];
     
     return await _db.orderBy("createdAt").get().then((value) {
@@ -19,30 +26,30 @@ class TodoRepository implements Repository {
   }
 
   @override
-  Future<bool> insert(todo) async {
+  Future<bool> insertTodo(Todo todo) async {
     bool temp = false;
     await _db.add(todo.toDocument()).then((value) => temp = !temp);
     return temp;
   }
 
   @override
-  Future<bool> update(todo) async {
+  Future<bool> updateTodo(Todo todo) async {
     bool temp = false;
     await _db.doc(todo.id).update(todo.toDocument()).then((value) => temp = !temp);
     return temp;
   }
 
   @override
-  Future<bool> delete(todo) async {
+  Future<bool> deleteTodo(Todo todo) async {
     bool temp = false;
     await _db.doc(todo.id).delete().then((value) => temp = !temp);
     return temp;
   }
 
-  @override
-  Stream fetch() {
-    return _db.snapshots().map((event) {
-      return event.docs.map((doc) => Todo.fromDocRef(doc)).toList();
-    });
-  }
+  // @override
+  // Stream fetch() {
+  //   return _db.snapshots().map((event) {
+  //     return event.docs.map((doc) => Todo.fromDocRef(doc)).toList();
+  //   });
+  // }
 }

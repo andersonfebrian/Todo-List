@@ -1,57 +1,76 @@
 import 'dart:async';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:todo_list/bloc/todos/todo_event.dart';
-import 'package:todo_list/bloc/todos/todo_state.dart';
+
+import 'package:bloc/bloc.dart';
+import 'package:meta/meta.dart';
+import 'package:todo_list/models/todo.dart';
 import 'package:todo_list/repository/todo_repository.dart';
+
+part 'todo_event.dart';
+part 'todo_state.dart';
 
 class TodoBloc extends Bloc<TodoEvent, TodoState> {
 
   final TodoRepository _todoRepository;
-  StreamSubscription? _streamSubscription;
 
-  TodoBloc(this._todoRepository) : super(TodoLoading());
-
-  @override
-  Stream<TodoState> mapEventToState(TodoEvent event) async* {
-    if(event is TodoLoaded) {
-      yield* _mapTodoLoadedToState();
-    }
-    
-    if(event is TodoAdded) {
-      yield* _mapTodoAddedToState(event);
-    }
-
-    if(event is TodoUpdated) {
-      yield* _mapTodoUpdatedToState(event);
-    }
-
-    if(event is TodoDeleted) {
-      yield* _mapTodoDeletedToState(event); 
-    }
-  }
-
-  Stream<TodoState> _mapTodoLoadedToState() async* {
-    _streamSubscription?.cancel();
-    _streamSubscription = _todoRepository.fetch().listen((todos) {
-      add(TodoUpdated(todos));
-    });
-  }
-
-  Stream<TodoState> _mapTodoAddedToState(TodoAdded event) async* {
-    _todoRepository.insert(event.todo);
-  }
-
-  Stream<TodoState> _mapTodoUpdatedToState(TodoUpdated event) async* {
-    _todoRepository.update(event.todo);
-  }
-
-  Stream<TodoState> _mapTodoDeletedToState(TodoDeleted event) async* {
-    _todoRepository.delete(event.todo);
-  }
+  TodoBloc(this._todoRepository) : super(TodoInitial());
 
   @override
-  Future<void> close() {
-    _streamSubscription?.cancel();
-    return super.close();
+  Stream<TodoState> mapEventToState(
+    TodoEvent event,
+  ) async* {
+    if(event is FetchTodos) {
+      yield* _mapFetchTodoToState();
+    }
+
+    if(event is AddTodo) {
+      yield* _mapAddTodoToState(event);
+    }
+
+    if(event is UpdateTodo) {
+      yield* _mapUpdateTodoToState(event);
+    }
+
+    if(event is DeleteTodo) {
+      yield* _mapDeleteTodoToState(event);
+    }
+  }
+
+  Stream<TodoState> _mapFetchTodoToState() async* {
+    try {
+      yield TodoLoading();
+      final _todos = await _todoRepository.fetchTodos();
+      yield TodoLoaded(_todos);
+    } on Exception {yield TodoError("");}
+  }
+
+  Stream<TodoState> _mapAddTodoToState(AddTodo event) async* {
+    try {
+      await _todoRepository.insertTodo(Todo(event.body));
+
+      final _todos = await _todoRepository.fetchTodos();
+      yield TodoLoaded(_todos);
+    } on Exception {
+      yield TodoError("Something Went Wrong. Please try again later.");
+    }
+  }
+
+  Stream<TodoState> _mapUpdateTodoToState(UpdateTodo event) async* {
+    try {
+      await _todoRepository.updateTodo(event.todo);
+      final _todos = await _todoRepository.fetchTodos();
+      yield(TodoLoaded(_todos));
+    } on Exception {
+      yield TodoError("Something Went Wrong. Please try again later.");
+    }
+  }
+
+  Stream<TodoState> _mapDeleteTodoToState(DeleteTodo event) async* {
+    try {
+      await _todoRepository.deleteTodo(event.todo);
+      final _todos = await _todoRepository.fetchTodos();
+      yield(TodoLoaded(_todos));
+    } on Exception {
+      yield TodoError("Something Went Wrong. Please try again later.");
+    }
   }
 }

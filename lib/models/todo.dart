@@ -30,10 +30,10 @@ class Todo {
 
   Map<String, Object> toDocument() {
     return {
-      "body" : body,
-      "isDone" : isDone ?? false,
-      "createdAt" : createdAt.toString(),
-      "updatedAt" : updatedAt.toString(),
+      "body": body,
+      "isDone": isDone ?? false,
+      "createdAt": createdAt.toString(),
+      "updatedAt": DateTime.now().toString(),
     };
   }
 }

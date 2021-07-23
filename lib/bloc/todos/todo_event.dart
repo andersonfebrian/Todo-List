@@ -1,32 +1,31 @@
-import 'package:todo_list/models/todo.dart';
+part of 'todo_bloc.dart';
 
+@immutable
 abstract class TodoEvent {
-  @override
-  List<Object> get prop => [];
+  const TodoEvent();
 }
 
-class TodoLoaded extends TodoEvent {}
-
-class TodoAdded extends TodoEvent {
-  final Todo todo;
-  TodoAdded(this.todo);
-
-  @override
-  List<Object> get prop => [todo];
+class FetchTodos extends TodoEvent {
+  
+  const FetchTodos();
 }
 
-class TodoUpdated extends TodoEvent {
-  final Todo todo;
-  TodoUpdated(this.todo);
-
-  @override
-  List<Object> get prop => [todo];
+class AddTodo extends TodoEvent {
+  final String body;
+  
+  const AddTodo(this.body);
 }
 
-class TodoDeleted extends TodoEvent {
-  final Todo todo;
-  TodoDeleted(this.todo);
+class UpdateTodo extends TodoEvent {
 
-  @override
-  List<Object> get prop => [todo];
+  final Todo todo;
+
+  const UpdateTodo(this.todo);
+}
+
+class DeleteTodo extends TodoEvent {
+
+  final Todo todo;
+
+  const DeleteTodo(this.todo);
 }
