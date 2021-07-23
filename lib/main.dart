@@ -4,6 +4,7 @@ import 'package:todo_list/bloc/todos/todo_bloc.dart';
 import 'package:todo_list/loading.dart';
 import 'package:todo_list/repository/todo_repository.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +26,10 @@ void main() async {
 class TodoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: Home());
+    return MaterialApp(
+      home: Home(),
+      debugShowCheckedModeBanner: false,
+    );
   }
 }
 
@@ -39,6 +43,113 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text("Todo List"),
+        actions: [
+          Container(
+            margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+            child: GestureDetector(
+              child: Icon(Icons.more_vert),
+              onTap: () async {
+                PackageInfo _packageInfo = await PackageInfo.fromPlatform();
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text("Todo List"),
+                      content: SizedBox(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(children: [
+                                        TextSpan(
+                                          text: "App Version: ",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: "${_packageInfo.version}",
+                                        ),
+                                      ]),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Divider(
+                              height: 10,
+                              color: Colors.transparent,
+                            ),
+                            Row(
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(children: [
+                                        TextSpan(
+                                          text: "Build Number: ",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        TextSpan(
+                                          text: "${_packageInfo.buildNumber}",
+                                        ),
+                                      ]),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      actions: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text("Bug Report"),
+                                    );
+                                  },
+                                );
+                              },
+                              child: RichText(
+                                text: TextSpan(children: [
+                                  TextSpan(
+                                    text: "Report a Bug ",
+                                    style: TextStyle(
+                                        fontSize: 16, color: Colors.white),
+                                  ),
+                                  WidgetSpan(
+                                    child: Icon(
+                                      Icons.bug_report_outlined,
+                                      size: 18,
+                                    ),
+                                  ),
+                                ]),
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: BlocConsumer<TodoBloc, TodoState>(
         listener: (context, state) {
