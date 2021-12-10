@@ -10,8 +10,8 @@ Todo _$TodoFromJson(Map<String, dynamic> json) {
   return Todo(
     json['body'] as String,
   )
-    ..uuid = json['uuid'] as String?
     ..isDone = json['isDone'] as bool?
+    ..id = json['id'] as String?
     ..createdAt = json['createdAt'] == null
         ? null
         : DateTime.parse(json['createdAt'] as String)
@@ -21,9 +21,9 @@ Todo _$TodoFromJson(Map<String, dynamic> json) {
 }
 
 Map<String, dynamic> _$TodoToJson(Todo instance) => <String, dynamic>{
-      'uuid': instance.uuid,
       'body': instance.body,
       'isDone': instance.isDone,
+      'id': instance.id,
       'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
