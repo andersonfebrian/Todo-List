@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_list/bloc/page_toggle/page_toggle_bloc.dart';
 import 'package:todo_list/bloc/todos/todo_bloc.dart';
 import 'package:todo_list/loading.dart';
+import 'package:todo_list/pages/login_page.dart';
+import 'package:todo_list/pages/register_page.dart';
+import 'package:todo_list/pages/todo_page.dart';
 import 'package:todo_list/repository/todo_repository.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +21,9 @@ void main() async {
           create: (context) => TodoBloc(
             TodoRepository(),
           ),
+        ),
+        BlocProvider<PageToggleBloc>(
+          create: (context) => PageToggleBloc(),
         ),
       ],
       child: TodoApp(),
@@ -33,10 +41,26 @@ class TodoApp extends StatelessWidget {
   }
 }
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   Home({Key? key}) : super(key: key);
 
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
   final _key = GlobalKey<FormState>();
+  final _auth = FirebaseAuth.instance;
+  bool? _loading = false;
+  User? _user;
+
+  @override
+  void initState() {
+    _auth.authStateChanges().listen((event) {
+      _user = event;
+    });
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -151,175 +175,97 @@ class Home extends StatelessWidget {
           ),
         ],
       ),
-      body: BlocConsumer<TodoBloc, TodoState>(
-        listener: (context, state) {
-          print("inside listener: $state");
-        },
+      body: StreamBuilder<User?>(
+        stream: _auth.authStateChanges(),
         builder: (context, state) {
-          print("inside builder: $state");
+          print("called - ${state.hasData}");
 
-          if (state is TodoInitial) {
+          if(state.hasData || _user != null) {
             BlocProvider.of<TodoBloc>(context).add(FetchTodos());
-            return Loading();
+            return TodoPage();
           }
 
-          if (state is TodoLoaded) {
-            if (state.todos.isEmpty) {
-              return Center(
-                child: Text("No Todo..."),
-              );
-            }
-            return ListView.builder(
-              itemCount: state.todos.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(
-                    "${state.todos[index].body}",
-                  ),
-                  leading: Checkbox(
-                    value: state.todos[index].isDone,
-                    onChanged: (value) {
-                      BlocProvider.of<TodoBloc>(context).add(
-                        UpdateTodo(state.todos[index]..isDone = value),
-                      );
-                    },
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        child: Icon(Icons.edit),
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.yellow[700],
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text("Update Todo"),
-                                content: Form(
-                                  key: _key,
-                                  child: TextFormField(
-                                    initialValue: state.todos[index].body,
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return "Text Field cannot be empty!";
-                                      }
-                                      return null;
-                                    },
-                                    onSaved: (value) {
-                                      BlocProvider.of<TodoBloc>(context).add(
-                                        UpdateTodo(state.todos[index]
-                                          ..body = value as String),
-                                      );
-                                    },
-                                  ),
+          return BlocBuilder<PageToggleBloc, PageToggleState>(
+            builder: (context, state) {
+              if (state is PageToggleInitial || state is LoginPageToggled) {
+                return const LoginPage();
+              }
+
+              if (state is RegisterPageToggled) {
+                return const RegisterPage();
+              }
+              return Container();
+            },
+          );
+        },
+      ),
+      floatingActionButton: StreamBuilder<User?>(
+        stream: _auth.authStateChanges(),
+        builder: (context, state) {
+          if (_user != null || state.hasData) {
+            return Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("Create Todo"),
+                            content: Form(
+                              key: _key,
+                              child: TextFormField(
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return "Text Field cannot be empty!";
+                                  }
+                                  return null;
+                                },
+                                onSaved: (value) {
+                                  BlocProvider.of<TodoBloc>(context).add(
+                                    AddTodo(value as String),
+                                  );
+                                },
+                              ),
+                            ),
+                            actions: [
+                              ElevatedButton(
+                                child: Text("Create"),
+                                style: ElevatedButton.styleFrom(
+                                  primary: Colors.green[500],
                                 ),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      if (_key.currentState!.validate()) {
-                                        _key.currentState!.save();
-                                        Navigator.pop(context);
-                                      }
-                                    },
-                                    child: Text("Update"),
-                                    style: ElevatedButton.styleFrom(
-                                      primary: Colors.green[500],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
+                                onPressed: () {
+                                  if (_key.currentState!.validate()) {
+                                    _key.currentState!.save();
+                                    Navigator.pop(context);
+                                  }
+                                },
+                              ),
+                            ],
                           );
-                        },
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      ElevatedButton(
-                        child: Icon(Icons.delete),
-                        style: ElevatedButton.styleFrom(
-                          primary: Colors.red[500],
-                        ),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text("Delete Todo?"),
-                                actions: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      BlocProvider.of<TodoBloc>(context).add(
-                                        DeleteTodo(state.todos[index]),
-                                      );
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text("Delete"),
-                                    style: ElevatedButton.styleFrom(
-                                      primary: Colors.red[500],
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
-                      ),
-                    ],
+                        });
+                  },
+                  child: Icon(Icons.add),
+                ),
+                if (_user != null)
+                  FloatingActionButton(
+                    onPressed: () {
+                      setState(() {
+                        _loading = !_loading!;
+                        _user = null;
+                      });
+                      _auth.signOut();
+                      BlocProvider.of<PageToggleBloc>(context).add(ToggleLoginPage());
+                    },
+                    child: Text("Logout"),
                   ),
-                );
-              },
+              ],
             );
           }
 
-          return Loading();
+          return Container();
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: Text("Create Todo"),
-                  content: Form(
-                    key: _key,
-                    child: TextFormField(
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return "Text Field cannot be empty!";
-                        }
-                        return null;
-                      },
-                      onSaved: (value) {
-                        BlocProvider.of<TodoBloc>(context).add(
-                          AddTodo(value as String),
-                        );
-                      },
-                    ),
-                  ),
-                  actions: [
-                    ElevatedButton(
-                      child: Text("Create"),
-                      style: ElevatedButton.styleFrom(
-                        primary: Colors.green[500],
-                      ),
-                      onPressed: () {
-                        if (_key.currentState!.validate()) {
-                          _key.currentState!.save();
-                          Navigator.pop(context);
-                        }
-                      },
-                    ),
-                  ],
-                );
-              });
-        },
-        child: Icon(Icons.add),
       ),
     );
   }

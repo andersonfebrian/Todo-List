@@ -33,6 +33,7 @@ dependencies:
   flutter_bloc: ^7.0.1
   bloc: ^7.0.0
   package_info_plus:
+  firebase_auth: ^3.0.1
 
 dev_dependencies:
   flutter_test:
